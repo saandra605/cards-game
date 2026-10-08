@@ -1,4 +1,11 @@
 # Development Log
 
-|  Date  | Start time | Duration | Driver | Navigator|                 What we did                  |
-|08-10-36|    10:00   |   20min  |   Solo |   n/a    |Created project folders, dev log and Git repo.
+## 8 Oct 2026, 14:00 (20 min)
+Driver: Sandra
+Navigator:
+Done: Set up folders, dev log and Git.
+
+## 8 Oct 2026, 15:00 (40 min)
+Driver: Sandra
+Navigator:
+Done: Wrote Card class.
