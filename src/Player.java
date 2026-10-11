@@ -14,6 +14,10 @@ public class Player {
     }
 
     public synchronized void setInitialHand(List<Card> cards) {
+
+        if (cards.size() != 4) {
+            throw new IllegalArgumentException("A hand must have exactly 4 cards");
+        }
         hand.clear();
         hand.addAll(cards);
     }
@@ -42,23 +46,44 @@ public class Player {
         return true;
     }
 
-    public synchronized void takeTurn(Deck leftDeck, Deck rightDeck) {
-        hand.add(leftDeck.drawFromTop());
+    public synchronized boolean takeTurn(Deck leftDeck, Deck rightDeck) {
 
-        int discardIndex = -1;
+        Deck first;
+        Deck second;
 
-        for (int i = 0; i < hand.size(); i++) {
-            if (hand.get(i).getValue() != preferredValue) {
-                discardIndex = i;
-                break;
+        if (leftDeck.getIndex() < rightDeck.getIndex()) {
+            first = leftDeck;
+            second = rightDeck;
+        } else {
+            first = rightDeck;
+            second = leftDeck;
+        }
+
+        synchronized (first) {
+            synchronized (second) {
+                Card drawn = leftDeck.drawFromTop();
+                if (drawn == null) {
+                    return false;
+                }
+                hand.add(drawn);
+
+                int discardIndex = -1;
+
+                for (int i = 0; i < hand.size(); i++) {
+                    if (hand.get(i).getValue() != preferredValue) {
+                        discardIndex = i;
+                        break;
+                    }
+                }
+
+                if (discardIndex == -1) {
+                    discardIndex = 0;
+                }
+
+                rightDeck.addToBottom(hand.remove(discardIndex));
+                return true;
             }
         }
-
-        if (discardIndex == -1) {
-            discardIndex = 0;
-        }
-
-        rightDeck.addToBottom(hand.remove(discardIndex));
     }
 
     public synchronized int getPlayerNumber() {
