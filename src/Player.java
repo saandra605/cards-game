@@ -1,16 +1,23 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class Player {
+public class Player implements Runnable {
 
     private final int playerNumber;
     private final int preferredValue;
     private final List<Card> hand;
+    private final Deck leftDeck;
+    private final Deck rightDeck;
+    private final AtomicInteger winner;
 
-    public Player(int playerNumber) {
+    public Player(int playerNumber, Deck leftDeck, Deck rightDeck, AtomicInteger winner) {
         this.playerNumber = playerNumber;
         this.preferredValue = playerNumber;
         this.hand = new ArrayList<>();
+        this.leftDeck = leftDeck;
+        this.rightDeck = rightDeck;
+        this.winner = winner;
     }
 
     public synchronized void setInitialHand(List<Card> cards) {
@@ -88,5 +95,10 @@ public class Player {
 
     public synchronized int getPlayerNumber() {
         return playerNumber;
+    }
+
+    @Override
+    public void run() {
+
     }
 }
