@@ -99,6 +99,12 @@ public class Player implements Runnable {
 
     @Override
     public void run() {
+        while (winner.get() == 0) {
+            takeTurn(leftDeck, rightDeck);
 
+            if (hasWinningHand()) {
+                winner.set(playerNumber);
+            }
+        }
     }
 }
