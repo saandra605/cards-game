@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class CardGame {
 
@@ -10,6 +11,11 @@ public class CardGame {
         Scanner in = new Scanner(System.in);
         int n = readPlayerCount(in);
         List<Card> pack = readPack(in, n);
+
+        AtomicInteger winner = new AtomicInteger(0);
+        List<Deck> decks = createDecks(n);
+        List<Player> players = createPlayers(n, decks, winner);
+        deal(pack, players, decks, n);
     }
 
     public static int readPlayerCount(Scanner in) {
@@ -85,5 +91,55 @@ public class CardGame {
             cards.add(new Card(value));
         }
         return cards;
+    }
+
+    public static List<Deck> createDecks(int n) {
+        List<Deck> decks = new ArrayList<>();
+        for (int i = 1; i <= n; i++) {
+            decks.add(new Deck(i));
+        }
+        return decks;
+    }
+
+    public static List<Player> createPlayers(int n, List<Deck> decks, AtomicInteger winner) {
+        List<Player> players = new ArrayList<>();
+
+        for (int i = 1; i <=n; i++) {
+            Deck left = decks.get(i - 1);
+            Deck right;
+
+            if (i == n) {
+                right = decks.get(0);
+            } else {
+                right = decks.get(i);
+            }
+
+            players.add(new Player(i, left, right, winner));
+        }
+        return players;
+    }
+
+    public static void deal(List<Card> pack, List<Player> players, List<Deck> decks, int n) {
+        int nextCard = 0;
+
+        int playerPosition = 0;
+        for (int count = 0; count < 4 * n; count++) {
+            players.get(playerPosition).addCard(pack.get(nextCard));
+            nextCard++;
+            playerPosition++;
+            if (playerPosition == n) {
+                playerPosition = 0;
+            }
+        }
+
+        int deckPosition = 0;
+        while (nextCard < pack.size()) {
+            decks.get(deckPosition).addToBottom(pack.get(nextCard));
+            nextCard++;
+            deckPosition++;
+            if (deckPosition == n) {
+                deckPosition = 0;
+            }
+        }
     }
 }
