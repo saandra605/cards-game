@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.io.PrintWriter;
 
 public class CardGame {
 
@@ -16,6 +17,8 @@ public class CardGame {
         List<Deck> decks = createDecks(n);
         List<Player> players = createPlayers(n, decks, winner);
         deal(pack, players, decks, n);
+        playGame(players);
+        writeDeckFiles(decks);
     }
 
     public static int readPlayerCount(Scanner in) {
@@ -139,6 +142,50 @@ public class CardGame {
             deckPosition++;
             if (deckPosition == n) {
                 deckPosition = 0;
+            }
+        }
+    }
+
+    public static void playGame(List<Player> players) {
+        List<Thread> threads = new ArrayList<>();
+
+        for (Player player:players) {
+            Thread thread = new Thread(player);
+            threads.add(thread);
+        }
+
+        for (Thread thread:threads) {
+            thread.start();
+        }
+
+        for (Thread thread:threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                System.out.println("The game was interrupted.");
+            }
+        }
+    }
+
+    public static void writeDeckFiles(List<Deck> decks) {
+        for (Deck deck:decks) {
+            int number = deck.getIndex();
+            List<Card> cards = deck.getContents();
+
+            String cardsText = "";
+            for (Card card:cards) {
+                cardsText = cardsText + card + " ";
+            }
+            cardsText = cardsText.trim();
+
+            String fileName = "deck" + number + "_output.txt";
+
+            try {
+                PrintWriter writer = new PrintWriter(fileName);
+                writer.println("deck" + number + "contents:" + cardsText);
+                writer.close();
+            } catch (FileNotFoundException e) {
+                System.out.println("Could not write " + fileName);
             }
         }
     }
