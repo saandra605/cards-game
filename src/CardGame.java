@@ -17,6 +17,7 @@ public class CardGame {
         List<Deck> decks = createDecks(n);
         List<Player> players = createPlayers(n, decks, winner);
         deal(pack, players, decks, n);
+        checkImmediateWin(players, winner);
         playGame(players);
         writeDeckFiles(decks);
     }
@@ -182,10 +183,18 @@ public class CardGame {
 
             try {
                 PrintWriter writer = new PrintWriter(fileName);
-                writer.println("deck" + number + "contents:" + cardsText);
+                writer.println("deck" + number + " contents: " + cardsText);
                 writer.close();
             } catch (FileNotFoundException e) {
                 System.out.println("Could not write " + fileName);
+            }
+        }
+    }
+
+    public static void checkImmediateWin(List<Player> players, AtomicInteger winner) {
+        for (Player player:players) {
+            if (player.hasWinningHand()) {
+                winner.set(player.getPlayerNumber());
             }
         }
     }
