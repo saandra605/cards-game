@@ -192,10 +192,12 @@ public class CardGame {
     }
 
     public static void checkImmediateWin(List<Player> players, AtomicInteger winner) {
-        for (Player player:players) {
-            if (player.hasWinningHand()) {
-                winner.set(player.getPlayerNumber());
-            }
+    for (Player player : players) {
+        if (player.hasWinningHand()
+                && winner.compareAndSet(0, player.getPlayerNumber())) {
+            System.out.println("Player " + player.getPlayerNumber() + " wins");
+            return;
         }
     }
+}
 }
