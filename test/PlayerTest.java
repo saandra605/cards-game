@@ -31,6 +31,8 @@ public class PlayerTest {
         player.addCard(new Card(6));
         player.addCard(new Card(6));
         player.addCard(new Card(8));
+
+        assertFalse(player.hasWinningHand());
     }
 
     @Test
@@ -73,7 +75,8 @@ public class PlayerTest {
     public void playerStillHasFourCardsAfterATurn() {
         Deck left = new Deck(1);
         Deck right = new Deck(2);
-        Player player = new Player(1, left, right, new AtomicInteger(0));
+        AtomicInteger winner = new AtomicInteger(0);
+        Player player = new Player(1, left, right, winner);
 
         player.addCard(new Card(1));
         player.addCard(new Card(1));
@@ -81,7 +84,12 @@ public class PlayerTest {
         player.addCard(new Card(2));
         left.addToBottom(new Card(1));
 
+        player.run();
+
         assertEquals(4, player.getHand().size());
+        assertEquals(1, winner.get());
+        assertEquals(0, left.size());
+        assertEquals(1, right.size());
     }
 
     @Test
