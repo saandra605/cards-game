@@ -126,7 +126,8 @@ public class Player implements Runnable {
 
             while (winner.get() == 0) {
                 if (!takeTurn(output)) {
-                    break;
+                    Thread.yield();
+                    continue;
                 }
 
                 if (hasWinningHand() && winner.compareAndSet(0, playerNumber)) {
