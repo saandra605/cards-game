@@ -2,7 +2,7 @@
 
 ## Requirements
 
-Use JDK 25. The tests use JUnit 4.13.2 and Hamcrest 1.3. Both test libraries are in the `lib` folder.
+Use JDK 17 or later. The tests use JUnit 4.13.2 and Hamcrest 1.3. Both test libraries are in the `lib` folder.
 
 ## Build and test
 

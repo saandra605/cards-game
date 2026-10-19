@@ -7,7 +7,7 @@ Push-Location $project
 try {
     New-Item -ItemType Directory -Force -Path $appOutput, $testOutput | Out-Null
 
-    javac -d $appOutput src\Card.java src\Deck.java src\Player.java src\CardGame.java
+    javac --release 17 -d  $appOutput src\Card.java src\Deck.java src\Player.java src\CardGame.java
     if ($LASTEXITCODE -ne 0) {
         throw "Game compilation failed."
     }
@@ -17,7 +17,7 @@ try {
     $libraries = "$junit;$hamcrest"
     $testClasspath = "$appOutput;$testOutput;$libraries"
 
-    javac -cp "$appOutput;$libraries" -d $testOutput test\CardTest.java test\CardGameTest.java test\DeckTest.java test\PlayerTest.java
+    javac --release 17 -cp "$appOutput;$libraries" -d $testOutput test\CardTest.java test\CardGameTest.java test\DeckTest.java test\PlayerTest.java
     if ($LASTEXITCODE -ne 0) {
         throw "Test compilation failed."
     }
