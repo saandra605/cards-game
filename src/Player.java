@@ -2,6 +2,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Player implements Runnable {
@@ -12,14 +13,21 @@ public class Player implements Runnable {
     private final Deck leftDeck;
     private final Deck rightDeck;
     private final AtomicInteger winner;
+    private final CountDownLatch initialHandsChecked;
 
     public Player(int playerNumber, Deck leftDeck, Deck rightDeck, AtomicInteger winner) {
+        this(playerNumber, leftDeck, rightDeck, winner, new CountDownLatch(1));
+    }
+
+    public Player(int playerNumber, Deck leftDeck, Deck rightDeck, AtomicInteger winner,
+            CountDownLatch initialHandsChecked) {
         this.playerNumber = playerNumber;
         this.preferredValue = playerNumber;
         this.hand = new ArrayList<>();
         this.leftDeck = leftDeck;
         this.rightDeck = rightDeck;
         this.winner = winner;
+        this.initialHandsChecked = initialHandsChecked;
     }
 
     public synchronized void setInitialHand(List<Card> cards) {
@@ -124,6 +132,18 @@ public class Player implements Runnable {
         try (PrintWriter output = new PrintWriter(fileName)) {
             output.println("player " + playerNumber + " initial hand " + handText());
 
+            if (hasWinningHand() && winner.compareAndSet(0, playerNumber)) {
+                System.out.println("Player " + playerNumber + " wins");
+            }
+
+            initialHandsChecked.countDown();
+            try {
+                initialHandsChecked.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+
             while (winner.get() == 0) {
                 if (!takeTurn(output)) {
                     Thread.yield();
@@ -131,7 +151,7 @@ public class Player implements Runnable {
                 }
 
                 if (hasWinningHand() && winner.compareAndSet(0, playerNumber)) {
-                    System.out.println("Player " + playerNumber + " wins");
+                    System.out.println("player " + playerNumber + " wins");
                 }
             }
 

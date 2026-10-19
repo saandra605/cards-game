@@ -78,23 +78,6 @@ public class CardGameTest {
         assertCardValues(decks.get(1).getContents(), 9, 11, 13, 15);
     }
 
-    @Test
-    public void detectsAnImmediateWinningHand() {
-        List<Deck> decks = CardGame.createDecks(1);
-        AtomicInteger winner = new AtomicInteger(0);
-        List<Player> players = CardGame.createPlayers(1, decks, winner);
-        Player player = players.get(0);
-
-        player.addCard(new Card(7));
-        player.addCard(new Card(7));
-        player.addCard(new Card(7));
-        player.addCard(new Card(7));
-
-        CardGame.checkImmediateWin(players, winner);
-
-        assertEquals(1, winner.get());
-    }
-
     private File createPack(String... values) throws IOException {
         File packFile = temporaryFolder.newFile("pack.txt");
 

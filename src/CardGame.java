@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.CountDownLatch;
 import java.io.PrintWriter;
 
 public class CardGame {
@@ -17,7 +18,6 @@ public class CardGame {
         List<Deck> decks = createDecks(n);
         List<Player> players = createPlayers(n, decks, winner);
         deal(pack, players, decks, n);
-        checkImmediateWin(players, winner);
         playGame(players);
         writeDeckFiles(decks);
     }
@@ -107,6 +107,7 @@ public class CardGame {
 
     public static List<Player> createPlayers(int n, List<Deck> decks, AtomicInteger winner) {
         List<Player> players = new ArrayList<>();
+        CountDownLatch initialHandsChecked = new CountDownLatch(n);
 
         for (int i = 1; i <=n; i++) {
             Deck left = decks.get(i - 1);
@@ -118,7 +119,7 @@ public class CardGame {
                 right = decks.get(i);
             }
 
-            players.add(new Player(i, left, right, winner));
+            players.add(new Player(i, left, right, winner, initialHandsChecked));
         }
         return players;
     }
@@ -191,13 +192,4 @@ public class CardGame {
         }
     }
 
-    public static void checkImmediateWin(List<Player> players, AtomicInteger winner) {
-    for (Player player : players) {
-        if (player.hasWinningHand()
-                && winner.compareAndSet(0, player.getPlayerNumber())) {
-            System.out.println("Player " + player.getPlayerNumber() + " wins");
-            return;
-        }
-    }
-}
 }

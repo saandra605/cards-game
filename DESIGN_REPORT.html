@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <title>Cards Game Design Rationale</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.25;
+            color: #111;
+        }
+
+        h1 {
+            font-size: 16pt;
+            margin: 0 0 12pt;
+        }
+
+        h2 {
+            font-size: 12pt;
+            margin: 12pt 0 4pt;
+        }
+
+        p {
+            margin: 0 0 8pt;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cards Game Design Rationale</h1>
+
+    <h2>Architecture</h2>
+    <p>The program uses four small classes, each with a clear responsibility. Card represents one card. It stores a non negative whole number and does not allow that value to change after construction. Its text form is the number itself, which makes it simple to include cards in hands and output files.</p>
+    <p>Deck stores cards in an ArrayDeque. Cards are added at the back and drawn from the front, giving the required first in, first out behaviour. It also stores its deck number so players can identify the decks in their action logs. Its contents method returns a copy rather than the internal collection, so other classes cannot change the deck by editing a returned list.</p>
+    <p>Player owns a hand, its preferred value, the deck to its left, the deck to its right and the shared winner value. It contains the rules for checking a hand and carrying out a turn. CardGame is responsible for the command line input, pack validation, creating the ring, dealing cards, starting and joining player threads, and writing the final deck files. Keeping these jobs separate makes the program easier to follow and test.</p>
+
+    <h2>Object oriented and concurrency decisions</h2>
+    <p>Card is immutable so a player and a deck can refer to the same card without risking a change to its value. Deck synchronises its operations because more than one player may use a deck at the same time. Player also protects its hand. During a turn it locks both the left and right decks, draws one card, chooses a card to discard, and adds that card to the right deck before releasing either lock. This keeps the draw and discard together as one action and preserves four cards in the player's hand when the action is complete.</p>
+    <p>Players lock the two decks in order of their deck numbers. Without a consistent order, two neighbouring players could each hold one deck lock while waiting for the other. That situation is called deadlock. Using the same order for every turn reduces that risk while keeping the locking rule small and visible.</p>
+    <p>Each Player implements Runnable, so CardGame can create one thread per player. All players share an AtomicInteger that starts at zero and holds the winner's number. A player claims the win with compareAndSet. Only a thread that changes the value from zero can announce that it has won. This also prevents a later thread from replacing an already recorded winner.</p>
+    <p>There is an extra start gate for the initial hands. Each player thread checks its dealt hand for a win, then signals that it has finished the check. The threads wait at the gate until all players have checked. This prevents one player from taking a normal turn before another player's initial winning hand has been checked. The initial winner is therefore declared by that player's own thread, as the specification requires.</p>
+    <p>The strategy uses the player's number as its preferred card value. After drawing, the player discards a non preferred card when possible. If the hand contains only preferred cards, it discards one of them. This is not an attempt to find the best play. It is a small rule that follows the assignment and stops a player keeping unwanted cards for every later turn.</p>
+
+    <h2>Alternatives considered</h2>
+    <p>A concurrent deque could protect each individual add or draw, but it would not make the complete draw and discard atomic across two decks. The explicit locks were chosen because they make the required boundary clear: both deck operations happen during the same locked action. A central coordinator could decide exactly when each player takes a turn, but it would add another class and could make the game effectively sequential. One thread per player is closer to the requested model.</p>
+    <p>The strategy could choose a random discard, as the assignment allows. The current code chooses the first non preferred card instead. This keeps the implementation predictable and avoids adding random number handling, while still following the stated rule.</p>
+
+    <h2>Testing</h2>
+    <p>The test suite uses JUnit 4.13.2 and Hamcrest 1.3. Card tests check that a card stores and displays its value and rejects a negative value. Deck tests check FIFO order, drawing from an empty deck, size changes, returning a safe copy of the contents, and adding cards from two threads without losing cards.</p>
+    <p>Player tests check that four equal cards win and a mixed hand does not. They also check that an invalid starting hand is rejected, that a player discards a non preferred card, and that a completed turn leaves four cards in the hand. Other tests check that a player does not take a turn after another winner is recorded and that an initial win is found by player threads before the decks are changed.</p>
+    <p>CardGame tests check that the player count is retried when it is not positive, that valid packs are accepted and packs with the wrong number of lines, non numeric values or negative values are rejected. They also check the order in which a pack is dealt to players and decks. The build script compiles the game and tests and runs the complete suite. A separate two player run was used to check that a normal game ends and creates the expected player and deck files.</p>
+    <p>These are behaviour tests rather than tests of private methods. They check important rules and card counts, but a finite test suite cannot explore every possible thread schedule or every possible pack. The output file formats have also been checked in a manual run rather than by automated file content tests.</p>
+
+    <h2>Limitations and specification coverage</h2>
+    <p>The specification says simultaneous wins do not need to be resolved. The shared winner value ensures only one thread claims and announces a win, but the game does not compare two winning hands or decide which is preferable. A valid pack is also not guaranteed to allow a winning hand. In that case the game may continue indefinitely, which the assignment says is normal and does not require the program to fix.</p>
+    <p>The game writes its output files to the current working folder. Existing files with the same names are replaced when the game runs. If a deck is empty, a player yields and tries again. With a correctly dealt pack, cards are conserved during turns and the decks start with cards, but this behaviour avoids a player failing if it does encounter an empty deck.</p>
+    <p>The input accepts a positive player count and a text pack with exactly eight times that many lines. Each line must contain a non negative whole number. Card values greater than the number of players remain valid. The first four rounds of cards are dealt to the players in order, then the remaining cards are dealt to the decks in order. Each player draws from the deck to its left and discards to the deck to its right.</p>
+    <p>After a winner is found, each player writes its own initial hand, actions, ending message and final hand. CardGame writes one final contents file for each deck. Deck sizes can differ at the end. The combination of separate classes, synchronised deck access, an atomic turn, one thread per player, input checks and output files addresses the main requirements while keeping the solution small enough to explain and maintain.</p>
+</body>
+</html>

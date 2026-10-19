@@ -111,4 +111,32 @@ public class PlayerTest {
         assertEquals(0, right.size());
         assertEquals(4, player.getHand().size());
     }
+
+    @Test
+    public void immediateWinIsCheckedByAllPlayerThreadsBeforeTurns() throws InterruptedException {
+        List<Deck> decks = CardGame.createDecks(2);
+        AtomicInteger winner = new AtomicInteger(0);
+        List<Player> players = CardGame.createPlayers(2, decks, winner);
+        Player winningPlayer = players.get(0);
+        Player otherPlayer = players.get(1);
+
+        winningPlayer.addCard(new Card(7));
+        winningPlayer.addCard(new Card(7));
+        winningPlayer.addCard(new Card(7));
+        winningPlayer.addCard(new Card(7));
+        otherPlayer.addCard(new Card(1));
+        otherPlayer.addCard(new Card(2));
+        otherPlayer.addCard(new Card(3));
+        otherPlayer.addCard(new Card(4));
+        decks.get(0).addToBottom(new Card(8));
+        decks.get(1).addToBottom(new Card(9));
+
+        CardGame.playGame(players);
+
+        assertEquals(1, winner.get());
+        assertTrue(winningPlayer.hasWinningHand());
+        assertEquals(4, otherPlayer.getHand().size());
+        assertEquals(1, decks.get(0).size());
+        assertEquals(1, decks.get(1).size());
+    }
 }
