@@ -75,6 +75,11 @@ Driver: Kamil
 Navigator: Sandra
 Done: Made tests for Card.java and CardGame.java in CardGameTest.java and CardTest.java. Then fixed behaviour tests in Player.
 
+## 19 Oct 2026 [12:45] (1hr 45 min)
+Driver: Kamil
+Navigator: Sandra
+Done: Added README.md and made it all work, changed a few pieces of code too.
+
 ## Significant commits
 
 ### 2214228 (11 Oct 2026)
